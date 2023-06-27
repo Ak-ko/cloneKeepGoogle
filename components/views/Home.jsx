@@ -5,9 +5,11 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
 
 import NoteContext from "../../context/NoteContext";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FlatList } from "react-native";
 import Card from "../atoms/Card";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -18,6 +20,17 @@ export default function Home({ navigation }) {
   const [searchTitle, setSearchTitle] = useState("");
 
   const { notes, setNotes } = useContext(NoteContext);
+
+  // get collection reference
+  const colRef = collection(db, "noteCollection");
+
+  useEffect(async () => {
+    await getDocs(colRef)
+      .then((colRef) => {
+        setNotes(colRef.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      })
+      .catch((err) => console.log(err));
+  }, [colRef?.docs?.length]);
 
   const goToFormPage = () => {
     navigation.navigate("FormPage");
@@ -47,6 +60,7 @@ export default function Home({ navigation }) {
         style={{
           marginTop: 40,
           marginHorizontal: 30,
+          flex: 1,
         }}
       >
         <Text style={header}>Notes</Text>

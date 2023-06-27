@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { View, TextInput } from "react-native";
 import { useContext } from "react";
 import NoteContext from "../../context/NoteContext";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
-export default function FormPage({ route }) {
+export default function FormPage({ navigation, route }) {
   const inputTitle = useRef();
+
+  // get collection reference
+  const colRef = collection(db, "noteCollection");
 
   const titleRef = useRef(null);
   const noteRef = useRef(null);
@@ -26,14 +31,18 @@ export default function FormPage({ route }) {
   }, []);
 
   useEffect(() => {
-    return () => {
+    const unsubscribe = navigation.addListener("state", async () => {
       if (titleRef.current || noteRef.current) {
         if (route.params) {
           updateNoteContext();
         } else {
-          addNoteToContext();
+          await addNoteToContext();
         }
       }
+    });
+
+    return () => {
+      unsubscribe();
     };
   }, []);
 
@@ -48,16 +57,19 @@ export default function FormPage({ route }) {
     setNotes(newNotes);
   };
 
-  const addNoteToContext = () => {
+  const addNoteToContext = async () => {
     setNotes((prevNotes) => {
       return [
         ...prevNotes,
         {
-          id: notes ? notes.length + 1 : 1,
           title: titleRef.current,
           note: noteRef.current,
         },
       ];
+    });
+    await addDoc(colRef, {
+      title: titleRef.current,
+      note: noteRef.current,
     });
   };
 

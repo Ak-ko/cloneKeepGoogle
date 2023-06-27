@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "cloneKeepGoogle",
-    "slug": "cloneKeepGoogle",
+    "slug": "akkeep",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,10 +21,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.aungkhant_11.akkeep"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "af48d619-2c00-495c-be82-ccd50dd530e6"
+      }
+    },
+    "owner": "aungkhant_11"
   }
 }

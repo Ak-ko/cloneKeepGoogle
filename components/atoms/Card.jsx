@@ -1,13 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import NoteContext from "../../context/NoteContext";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function Card({ note, navigation }) {
   const AnimatedView = Animated.createAnimatedComponent(View);
@@ -15,8 +17,13 @@ export default function Card({ note, navigation }) {
   const { setNotes } = useContext(NoteContext);
 
   const translateX = useSharedValue(0);
+  const height = useSharedValue(80);
+  const opacity = useSharedValue(1);
+
+  const deviceWidth = Dimensions.get("screen").width;
 
   const [isPress, setIsPress] = useState(false);
+  const docRef = doc(db, "noteCollection", note?.id);
 
   const editFormInput = () => {
     setIsPress(true);
@@ -29,16 +36,22 @@ export default function Card({ note, navigation }) {
   };
 
   const penGesture = useAnimatedGestureHandler({
-    onStart: (_, context) => {
-      context.translateX = translateX.value;
+    onActive: (event) => {
+      translateX.value = event.translationX;
     },
 
-    onActive: (event, context) => {
-      translateX.value = event.translationX + context.translateX;
-    },
-
-    onEnd: (_) => {
-      translateX.value = withSpring(0);
+    onEnd: async () => {
+      if (translateX.value < deviceWidth * 0.4) {
+        translateX.value = withTiming(0);
+      } else {
+        translateX.value = withTiming(deviceWidth);
+        height.value = withTiming(0);
+        opacity.value = withTiming(0);
+        await deleteDoc(docRef);
+        setNotes((prevNotes) =>
+          prevNotes.filter((data) => data.id !== note.id)
+        );
+      }
     },
   });
 
@@ -49,15 +62,20 @@ export default function Card({ note, navigation }) {
           translateX: translateX.value,
         },
       ],
+      height: height.value,
+      opacity: opacity.value,
+      marginBottom: opacity.value === 1 ? 10 : 0,
+      padding: opacity.value === 1 ? 10 : 0,
     };
   });
 
-  const handleGestureStateChange = (event) => {
-    const { nativeEvent } = event;
-    nativeEvent.translationX = translateX.value;
-    if (nativeEvent.velocityX > 100 && nativeEvent.translationX > 200) {
-      setNotes((prevNotes) => prevNotes.filter((data) => data.id !== note.id));
-    }
+  const handleGestureStateChange = async (event) => {
+    // const { nativeEvent } = event;
+    // nativeEvent.translationX = translateX.value;
+    // if (nativeEvent.translationX > deviceWidth) {
+    //   await deleteDoc(docRef);
+    //   setNotes((prevNotes) => prevNotes.filter((data) => data.id !== note.id));
+    // }
   };
 
   return (
@@ -69,10 +87,7 @@ export default function Card({ note, navigation }) {
         style={[
           {
             borderWidth: 1,
-            paddingHorizontal: 15,
-            paddingVertical: 25,
             borderRadius: 8,
-            marginBottom: 15,
           },
           animatedStyle,
         ]}
@@ -99,8 +114,8 @@ export default function Card({ note, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  buttonPressed: {
-    backgroundColor: "#eee",
-  },
-});
+// const styles = StyleSheet.create({
+//   buttonPressed: {
+//     backgroundColor: "#eee",
+//   },
+// });
