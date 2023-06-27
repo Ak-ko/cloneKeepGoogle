@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
+import { useContext } from "react";
+import { View, Text, Pressable, Dimensions } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedGestureHandler,
@@ -22,12 +22,9 @@ export default function Card({ note, navigation }) {
 
   const deviceWidth = Dimensions.get("screen").width;
 
-  const [isPress, setIsPress] = useState(false);
   const docRef = doc(db, "noteCollection", note?.id);
 
   const editFormInput = () => {
-    setIsPress(true);
-
     navigation.navigate("FormPage", {
       id: note.id,
       title: note.title,
@@ -47,10 +44,6 @@ export default function Card({ note, navigation }) {
         translateX.value = withTiming(deviceWidth);
         height.value = withTiming(0);
         opacity.value = withTiming(0);
-        await deleteDoc(docRef);
-        setNotes((prevNotes) =>
-          prevNotes.filter((data) => data.id !== note.id)
-        );
       }
     },
   });
@@ -69,13 +62,11 @@ export default function Card({ note, navigation }) {
     };
   });
 
-  const handleGestureStateChange = async (event) => {
-    // const { nativeEvent } = event;
-    // nativeEvent.translationX = translateX.value;
-    // if (nativeEvent.translationX > deviceWidth) {
-    //   await deleteDoc(docRef);
-    //   setNotes((prevNotes) => prevNotes.filter((data) => data.id !== note.id));
-    // }
+  const handleGestureStateChange = async () => {
+    if (translateX.value > 200) {
+      await deleteDoc(docRef);
+      setNotes((prevNotes) => prevNotes.filter((data) => data.id !== note.id));
+    }
   };
 
   return (
@@ -99,23 +90,17 @@ export default function Card({ note, navigation }) {
               fontWeight: "bold",
             }}
           >
-            {note.title}
+            {note?.title}
           </Text>
           <Text
             style={{
               marginTop: 5,
             }}
           >
-            {note.note}
+            {note?.note}
           </Text>
         </Pressable>
       </AnimatedView>
     </PanGestureHandler>
   );
 }
-
-// const styles = StyleSheet.create({
-//   buttonPressed: {
-//     backgroundColor: "#eee",
-//   },
-// });

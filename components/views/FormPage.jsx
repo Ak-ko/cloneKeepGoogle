@@ -31,18 +31,22 @@ export default function FormPage({ navigation, route }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("state", async () => {
-      if (titleRef.current || noteRef.current) {
-        if (route.params) {
-          updateNoteContext();
-        } else {
-          await addNoteToContext();
+    const cleanup = async () => {
+      try {
+        if (titleRef.current || noteRef.current) {
+          if (route.params) {
+            updateNoteContext();
+          } else {
+            await addNoteToContext();
+          }
         }
+      } catch (err) {
+        console.log(err);
       }
-    });
+    };
 
     return () => {
-      unsubscribe();
+      cleanup();
     };
   }, []);
 

@@ -64,13 +64,15 @@ export default function Home({ navigation }) {
         }}
       >
         <Text style={header}>Notes</Text>
-        <FlatList
-          data={filteredNotes}
-          renderItem={({ item }) => (
-            <Card note={item} navigation={navigation} />
-          )}
-          keyExtractor={(item) => item.id}
-        />
+        {notes && (
+          <FlatList
+            data={filteredNotes}
+            renderItem={({ item }) => (
+              <Card note={item} navigation={navigation} />
+            )}
+            keyExtractor={(item, index) => index}
+          />
+        )}
       </View>
       <View style={bottomNav}>
         <TouchableOpacity onPress={goToFormPage} style={addButton}>
